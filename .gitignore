@@ -1,0 +1,10 @@
+test/
+
+#Go build cache
+pkg/
+bin/
+tmp/
+
+#OS 
+.DS_Store
+Thumbs.db
