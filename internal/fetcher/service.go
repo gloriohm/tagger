@@ -17,21 +17,51 @@ func NewBrainzClient(c *musicbrainzws2.Client) *BrainzClient {
 	return &BrainzClient{client: c}
 }
 
-func (bc BrainzClient) GetReleaseByID(id string) (*Album, error) {
+func (bc BrainzClient) GetReleaseByID(id string) (Album, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	filter := musicbrainzws2.IncludesFilter{Includes: []string{"recordings", "labels", "release-groups", "artist-credits"}}
 	release, err := bc.client.LookupRelease(ctx, mbtypes.MBID(id), filter)
 	if err != nil {
-		return nil, handleResponseError(err)
+		return Album{}, handleResponseError(err)
 	}
 
 	album := ReleaseToAlbum(release)
-	return &album, nil
+	return album, nil
 }
 
-func (bc BrainzClient) SearchReleaseGroup(album, artist string) (*string, error) {
+func (bc BrainzClient) GetReleaseGroup(id string) ([]ReleaseInfo, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := musicbrainzws2.IncludesFilter{Includes: []string{"releases", "media"}}
+
+	releaseGroup, err := bc.client.LookupReleaseGroup(ctx, mbtypes.MBID(id), filter)
+	if err != nil {
+		return nil, handleResponseError(err)
+	}
+
+	var releases []ReleaseInfo
+	for _, r := range releaseGroup.Releases {
+		if r.Status == "Official" && r.Quality != "low" {
+			release := ReleaseInfo{
+				ID:      string(r.ID),
+				Quality: r.Quality,
+				Country: string(r.CountryCode),
+				Date:    extractReleaseDate(r.Date),
+				Barcode: string(r.Barcode),
+				Media:   extractMediaInfo(r.Media),
+			}
+
+			releases = append(releases, release)
+		}
+	}
+
+	return releases, nil
+}
+
+func (bc BrainzClient) SearchReleaseGroup(album, artist string) ([]ReleaseInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -66,35 +96,5 @@ func (bc BrainzClient) SearchReleaseGroup(album, artist string) (*string, error)
 		return nil, ErrNotFound
 	}
 
-	return &releaseGroupID, nil
-}
-
-func (bc BrainzClient) GetReleaseGroup(id string) ([]ReleaseInfo, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	filter := musicbrainzws2.IncludesFilter{Includes: []string{"releases", "media"}}
-
-	releaseGroup, err := bc.client.LookupReleaseGroup(ctx, mbtypes.MBID(id), filter)
-	if err != nil {
-		return nil, handleResponseError(err)
-	}
-
-	var releases []ReleaseInfo
-	for _, r := range releaseGroup.Releases {
-		if r.Status == "Official" && r.Quality != "low" {
-			release := ReleaseInfo{
-				ID:      string(r.ID),
-				Quality: r.Quality,
-				Country: string(r.CountryCode),
-				Date:    extractReleaseDate(r.Date),
-				Barcode: string(r.Barcode),
-				Media:   extractMediaInfo(r.Media),
-			}
-
-			releases = append(releases, release)
-		}
-	}
-
-	return releases, nil
+	return bc.GetReleaseGroup(releaseGroupID)
 }

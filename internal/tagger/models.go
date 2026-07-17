@@ -2,23 +2,55 @@ package tagger
 
 import "time"
 
-type ComparableAlbum struct {
-	MBReleaseID  string
-	Name         string
-	AlbumArtists []string
-	Tracks       []ComparableTrack
+type Album struct {
+	ID               int64
+	MBReleaseID      string
+	MBReleaseGroupID string
+	Name             string
+	AlbumArtists     []Artist
+	ReleaseDate      time.Time
+	Label            Label
+	CatalogueNumber  string
+	TotalDiscs       int
+	Genres           []Genre
+	Tracks           []Track
 }
 
-type ComparableTrack struct {
-	MBTrackID string
-	Name      string
-	Position  int
-	Length    time.Duration
+type Artist struct {
+	ID   int64
+	MBID string
+	Name string
+	Slug string
+}
+
+type Track struct {
+	ID            int64
+	MBTrackID     string
+	MBRecordingID string
+	AlbumID       int64
+	Name          string
+	Artists       []Artist
+	ArtistCredit  string
+	TrackNumber   int
+	DiscNumber    int
+}
+
+type Genre struct {
+	ID   int64
+	Name string
+	Slug string
+}
+
+type Label struct {
+	ID   int64
+	MBID string
+	Name string
+	Slug string
 }
 
 type ImportStatus string
 
-var (
+const (
 	ImportStatusInitialized  ImportStatus = "initialized"
 	ImportStatusPendingInput ImportStatus = "pending_input"
 	ImportStatusFinished     ImportStatus = "finished"

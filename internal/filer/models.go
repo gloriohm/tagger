@@ -25,5 +25,5 @@ type Identifiers struct {
 	ReleaseID      string
 	ReleaseGroupID string
 	AlbumName      string
-	AlbumArtists   []string
+	AlbumArtist    string
 }

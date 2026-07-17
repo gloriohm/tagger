@@ -90,3 +90,58 @@ func (s *Service) ImportAlbum(status ImportStatus) error {
 
 	return nil
 }
+
+func (s *Service) GetRelease(id string) (fetcher.Album, error) {
+	if id == "" {
+		return fetcher.Album{}, errors.New("id was empty")
+	}
+
+	return s.client.GetReleaseByID(id)
+}
+
+func (s *Service) GetReleaseGroup(id filer.Identifiers) ([]fetcher.ReleaseInfo, error) {
+	if id.ReleaseGroupID != "" {
+		releases, err := s.client.GetReleaseGroup(id.ReleaseGroupID)
+		if len(releases) > 0 {
+			return releases, nil
+		}
+		if err != nil && !errors.Is(err, fetcher.ErrNotFound) {
+			return nil, err
+		}
+	}
+
+	if id.AlbumName != "" && id.AlbumArtist != "" {
+		return s.client.SearchReleaseGroup(id.AlbumName, id.AlbumArtist)
+	}
+
+	return nil, errors.New("release_group_id and album/artist was empty")
+}
+
+func ParseAlbum(in fetcher.Album) Album {
+	var a Album
+	a.MBReleaseID = in.MBReleaseID
+	a.MBReleaseGroupID = in.MBReleaseGroupID
+	a.Name = in.Name
+
+	// check this against zero value and request user input if true
+	a.ReleaseDate = in.ReleaseDate
+
+}
+
+func (s *Service) parseLabel(in fetcher.LabelInfo) (Label, error) {
+	var out Label
+	out, err := s.repo.SelectLabelByMBID(in.MBID)
+	if errors.Is(err, ErrNoRows) {
+		out.MBID = in.MBID
+		out.Name = in.Name
+		out.Slug = toSlug(in.Name)
+		id, err := s.repo.InsertLabel(out)
+		if err != nil {
+			return out, err
+		}
+
+		out.ID = id
+	}
+
+	return out, nil
+}

@@ -37,6 +37,17 @@ func (r *SQLiteRepo) SelectArtistByName(name string) (*Artist, error) {
 	)
 }
 
+func (r *SQLiteRepo) SelectArtistByMBID(mbid string) (*Artist, error) {
+	return scanArtist(
+		r.db.QueryRow(
+			`SELECT id, name
+			 FROM artists
+			 WHERE mbid = ?`,
+			mbid,
+		),
+	)
+}
+
 func (r *SQLiteRepo) InsertPaths(paths []string) error {
 	ctx := context.Background()
 	tx, err := r.db.BeginTx(ctx, nil)
