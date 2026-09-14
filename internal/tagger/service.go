@@ -58,6 +58,10 @@ func (s *Service) InitializeDirectory(root string) error {
 	return nil
 }
 
+func (s *Service) GetMusicBrainzMatch(album StagedAlbum) error {
+
+}
+
 func (s *Service) ResumeImport() error {
 	// first try albums that are not fully imported
 	trying := ImportStatusPendingInput

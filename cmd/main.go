@@ -5,6 +5,7 @@ import (
 	"tagger/internal/fetcher"
 	"tagger/internal/storage"
 	"tagger/internal/tagger"
+	"tagger/internal/ui"
 
 	"go.uploadedlobster.com/musicbrainzws2"
 )
@@ -23,6 +24,10 @@ func main() {
 	tagSvc := tagger.NewService(repo, fetchSvc)
 
 	if err = tagSvc.InitializeDirectory("test"); err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
+	}
+
+	if err := ui.Run(tagSvc); err != nil {
+		log.Fatal(err)
 	}
 }
