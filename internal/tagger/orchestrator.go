@@ -4,6 +4,7 @@ import "errors"
 
 type Orchestrator struct {
 	store Store
+	svc   *Service
 }
 
 type Store interface {
@@ -18,12 +19,13 @@ const (
 	EnterGenres
 )
 
-type ImportStage int
+type ImportState int
 
 const (
-	PathStored ImportStage = iota
-	MetaValidated
-	MetaMatched
+	StateImportStarted ImportState = iota
+	StateInvalidAlbum
+	StateMetaValidated
+	StateMetaMatched
 	DomainModelCreated
 	DomainModelValidated
 	FilesTagged
@@ -43,15 +45,16 @@ func (o *Orchestrator) Run() error {
 		} else if err != nil {
 			return err
 		}
-
 	}
 }
 
-func (s *Service) AdvanceAlbum(album StagedAlbum) error {
-	switch album.Stage {
-	case StageImportStarted:
-		return s.GetMusicBrainzMatch(album)
+func (o *Orchestrator) AdvanceAlbum(jobID int) error {
+	state, err := o.svc.GetJobState
+	if err != nil {
+		return err
+	}
+	switch state {
+	case StateImportStarted:
+		return o.svc.GetMusicBrainzMatch(album)
 	}
 }
-
-func (o *Orchestrator) ()
