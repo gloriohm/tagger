@@ -8,11 +8,11 @@ import (
 	"go.senan.xyz/taglib"
 )
 
-func LoadAlbum(path string) (Identifiers, error) {
+func LoadAlbum(path string) (AlbumIdentifiers, error) {
 	var album Album
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		return Identifiers{}, err
+		return AlbumIdentifiers{}, err
 	}
 
 	for _, entry := range entries {
@@ -27,17 +27,17 @@ func LoadAlbum(path string) (Identifiers, error) {
 
 		track, err := LoadTrack(entry.Name())
 		if err != nil {
-			return Identifiers{}, err
+			return AlbumIdentifiers{}, err
 		}
 
 		album = append(album, track)
 	}
 
 	if err := album.ValidateAlbum(); err != nil {
-		return Identifiers{}, err
+		return AlbumIdentifiers{}, err
 	}
 
-	ids, err := parseIdentifiers(album[0])
+	ids, err := parseAlbumIdentifiers(album[0])
 
 	return ids, nil
 }

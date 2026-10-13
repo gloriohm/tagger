@@ -1,6 +1,7 @@
 package filer
 
 import (
+	"fmt"
 	"slices"
 )
 
@@ -10,19 +11,19 @@ func (a Album) ValidateAlbum() error {
 	}
 
 	if err := a.validateAlbumArtist(); err != nil {
-		return err
+		return fmt.Errorf("invalid album artist: %w", err)
 	}
 
 	if err := a.validateAlbumName(); err != nil {
-		return err
+		return fmt.Errorf("invalid album name: %w", err)
 	}
 
 	if err := a.validateAlbumReleaseID(); err != nil {
-		return err
+		return fmt.Errorf("invalid release ID: %w", err)
 	}
 
-	if err := a.validateAlbumReleaseID(); err != nil {
-		return err
+	if err := a.validateAlbumReleaseGroupID(); err != nil {
+		return fmt.Errorf("invalid release group ID: %w", err)
 	}
 
 	return nil

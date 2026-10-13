@@ -21,7 +21,7 @@ type Track struct {
 
 type Album []Track
 
-type Identifiers struct {
+type AlbumIdentifiers struct {
 	ReleaseID      string
 	ReleaseGroupID string
 	AlbumName      string

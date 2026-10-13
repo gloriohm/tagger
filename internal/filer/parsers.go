@@ -32,12 +32,12 @@ func firstTag(tags map[string][]string, key string) string {
 	return values[0]
 }
 
-func parseIdentifiers(t Track) (Identifiers, error) {
+func parseAlbumIdentifiers(t Track) (AlbumIdentifiers, error) {
 	if len(t.AlbumArtists) == 0 {
-		return Identifiers{}, ErrNoValue
+		return AlbumIdentifiers{}, ErrNoValue
 	}
 
-	return Identifiers{
+	return AlbumIdentifiers{
 		ReleaseID:      t.MusicBrainzAlbumID,
 		ReleaseGroupID: t.MusicBrainzReleaseGroupID,
 		AlbumName:      t.Album,
