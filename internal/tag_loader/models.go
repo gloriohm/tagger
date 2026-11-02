@@ -1,6 +1,9 @@
 package tag_loader
 
+import "time"
+
 type Track struct {
+	Path                      string
 	Title                     string
 	Artists                   []string
 	AlbumArtists              []string
@@ -17,6 +20,7 @@ type Track struct {
 	MusicBrainzReleaseGroupID string
 	MusicBrainzArtistID       string
 	MusicBrainzAlbumArtistID  string
+	Duration                  time.Duration
 }
 
 type Album []Track
@@ -26,4 +30,6 @@ type AlbumIdentifiers struct {
 	ReleaseGroupID string
 	AlbumName      string
 	AlbumArtist    string
+	TotalDiscs     int
+	AlbumTags      Album
 }

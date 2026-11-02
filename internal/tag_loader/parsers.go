@@ -1,9 +1,14 @@
 package tag_loader
 
-import "go.senan.xyz/taglib"
+import (
+	"fmt"
 
-func parseTrack(tags map[string][]string) Track {
+	"go.senan.xyz/taglib"
+)
+
+func parseTrack(path string, tags map[string][]string, props taglib.Properties) Track {
 	track := Track{
+		Path:                      path,
 		Title:                     firstTag(tags, taglib.Title),
 		Artists:                   tags[taglib.Artist],
 		AlbumArtists:              tags[taglib.AlbumArtist],
@@ -20,6 +25,7 @@ func parseTrack(tags map[string][]string) Track {
 		MusicBrainzReleaseGroupID: firstTag(tags, taglib.MusicBrainzReleaseGroupID),
 		MusicBrainzArtistID:       firstTag(tags, taglib.MusicBrainzArtistID),
 		MusicBrainzAlbumArtistID:  firstTag(tags, taglib.MusicBrainzAlbumArtistID),
+		Duration:                  props.Length,
 	}
 	return track
 }
@@ -34,7 +40,7 @@ func firstTag(tags map[string][]string, key string) string {
 
 func parseAlbumIdentifiers(t Track) (AlbumIdentifiers, error) {
 	if len(t.AlbumArtists) == 0 {
-		return AlbumIdentifiers{}, ErrNoValue
+		return AlbumIdentifiers{}, fmt.Errorf("%w: no album artist", ErrNoValue)
 	}
 
 	return AlbumIdentifiers{

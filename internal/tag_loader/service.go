@@ -39,6 +39,12 @@ func LoadAlbum(path string) (AlbumIdentifiers, error) {
 
 	ids, err := parseAlbumIdentifiers(album[0])
 
+	// append tracks so tags are available without loading again
+	ids.AlbumTags = album
+
+	// derive total discs for validation later
+	ids.TotalDiscs = album.DeriveTotalDiscs()
+
 	return ids, nil
 }
 
@@ -48,7 +54,9 @@ func LoadTrack(path string) (Track, error) {
 		return Track{}, err
 	}
 
-	track := parseTrack(tags)
+	props, err := taglib.ReadProperties(path)
+
+	track := parseTrack(path, tags, props)
 
 	return track, nil
 }

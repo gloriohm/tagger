@@ -3,7 +3,20 @@ package tag_loader
 import (
 	"fmt"
 	"slices"
+	"strconv"
 )
+
+func (a Album) DeriveTotalDiscs() int {
+	discs := 1
+	for _, t := range a {
+		discNumber, _ := strconv.Atoi(t.DiscNumber)
+		if discNumber > discs {
+			discs = discNumber
+		}
+	}
+
+	return discs
+}
 
 func (a Album) ValidateAlbum() error {
 	if len(a) == 0 {
