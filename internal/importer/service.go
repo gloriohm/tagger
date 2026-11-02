@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"tagger/internal/fetcher"
+	"tagger/internal/mbfetcher"
 
 	"github.com/google/uuid"
 )
@@ -33,7 +33,7 @@ type Repo interface {
 	InsertTrackArtists(in []TrackArtistMap) error
 }
 
-func (s *Service) RunCreateAlbumJob(in fetcher.Album) error {
+func (s *Service) RunCreateAlbumJob(in mbfetcher.Album) error {
 	albumArtistsIDs, err := s.upsertArtists(in.AlbumArtists)
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (s *Service) RunCreateAlbumJob(in fetcher.Album) error {
 	return nil
 }
 
-func (s *Service) insertTracks(albumID int64, tracks []fetcher.Track) ([]TrackArtistMap, error) {
+func (s *Service) insertTracks(albumID int64, tracks []mbfetcher.Track) ([]TrackArtistMap, error) {
 	var trackMap []TrackArtistMap
 	for _, t := range tracks {
 		trackID, err := s.repo.InsertTrack(parseTrack(t, albumID))
@@ -81,7 +81,7 @@ func (s *Service) insertTracks(albumID int64, tracks []fetcher.Track) ([]TrackAr
 	return trackMap, nil
 }
 
-func (s *Service) upsertArtists(in []fetcher.Artist) ([]int64, error) {
+func (s *Service) upsertArtists(in []mbfetcher.Artist) ([]int64, error) {
 	var artistIDs []int64
 	for _, a := range in {
 		id, err := s.repo.SelectArtistIDByMBID(a.MBID)
@@ -102,7 +102,7 @@ func (s *Service) upsertArtists(in []fetcher.Artist) ([]int64, error) {
 	return artistIDs, nil
 }
 
-func (s *Service) upsertLabel(in fetcher.LabelInfo) (int64, error) {
+func (s *Service) upsertLabel(in mbfetcher.LabelInfo) (int64, error) {
 	id, err := s.repo.SelectLabelByMBID(in.MBID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return s.repo.InsertLabel(parseLabel(in))
@@ -115,7 +115,7 @@ func (s *Service) upsertLabel(in fetcher.LabelInfo) (int64, error) {
 	return id, nil
 }
 
-func (s *Service) insertAlbum(in fetcher.Album) (int64, error) {
+func (s *Service) insertAlbum(in mbfetcher.Album) (int64, error) {
 	album := parseAlbum(in)
 
 	return s.repo.InsertAlbum(album)

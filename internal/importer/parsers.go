@@ -1,8 +1,8 @@
 package importer
 
-import "tagger/internal/fetcher"
+import "tagger/internal/mbfetcher"
 
-func parseTrack(in fetcher.Track, albumID int64) Track {
+func parseTrack(in mbfetcher.Track, albumID int64) Track {
 	return Track{
 		MBTrackID:     in.MBTrackID,
 		MBRecordingID: in.MBRecordingID,
@@ -14,7 +14,7 @@ func parseTrack(in fetcher.Track, albumID int64) Track {
 	}
 }
 
-func parseArtists(in []fetcher.Artist) []Artist {
+func parseArtists(in []mbfetcher.Artist) []Artist {
 	var artists []Artist
 	for _, a := range in {
 		artists = append(artists, parseArtist(a))
@@ -23,21 +23,21 @@ func parseArtists(in []fetcher.Artist) []Artist {
 	return artists
 }
 
-func parseArtist(in fetcher.Artist) Artist {
+func parseArtist(in mbfetcher.Artist) Artist {
 	return Artist{
 		MBID: in.MBID,
 		Name: in.Name,
 	}
 }
 
-func parseLabel(in fetcher.LabelInfo) Label {
+func parseLabel(in mbfetcher.LabelInfo) Label {
 	return Label{
 		Name: in.Name,
 		MBID: in.MBID,
 	}
 }
 
-func parseAlbum(in fetcher.Album) Album {
+func parseAlbum(in mbfetcher.Album) Album {
 	return Album{
 		MBReleaseID:      in.MBReleaseID,
 		MBReleaseGroupID: in.MBReleaseGroupID,

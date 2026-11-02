@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"tagger/internal/fetcher"
+	"tagger/internal/mbfetcher"
 	"tagger/internal/storage"
 	"tagger/internal/tagger"
 	"tagger/internal/ui"
@@ -20,7 +20,7 @@ func main() {
 	repo := tagger.NewSQLiteRepo(database)
 	appInfo := musicbrainzws2.AppInfo{Name: "mangum0pus@proton.me", Version: "0.0.1"}
 	mbclient := musicbrainzws2.NewClient(appInfo)
-	fetchSvc := fetcher.NewBrainzClient(mbclient)
+	fetchSvc := mbfetcher.NewBrainzClient(mbclient)
 	tagSvc := tagger.NewService(repo, fetchSvc)
 
 	if err = tagSvc.InitializeDirectory("test"); err != nil {

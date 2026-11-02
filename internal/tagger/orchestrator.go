@@ -1,7 +1,5 @@
 package tagger
 
-import "errors"
-
 type Orchestrator struct {
 	store Store
 	svc   *Service
@@ -17,18 +15,12 @@ const (
 	NoAction UserAction = iota
 	ProvideMatch
 	EnterGenres
-)
-
-type ImportState int
-
-const (
-	StateImportStarted ImportState = iota
-	StateInvalidAlbum
-	StateMetaValidated
-	StateMetaMatched
-	DomainModelCreated
-	DomainModelValidated
-	FilesTagged
+	ValidateFolder
+	KillProgram
+	RetryMusicBrainzReleaseGroup
+	ValidateMusicBrainzResult
+	DisplayResult
+	InputMusicBrainzReleaseID
 )
 
 type ActionObject struct {
@@ -36,25 +28,30 @@ type ActionObject struct {
 	Description []string
 }
 
-func (o *Orchestrator) Run() error {
-	for {
-		err := o.store.ResumeImport()
-		if errors.Is(err, ErrNoRows) {
-			// no albums awaiting import
-			return nil
-		} else if err != nil {
-			return err
-		}
+func (o *Orchestrator) RunImportService(path string) error {
+
+}
+
+func (o *Orchestrator) AdvanceJob(job Job) (Signal, error) {
+	switch job.Stage {
+	case StageImportStarted:
+		return o.svc.GetMusicBrainzMatch(job)
 	}
 }
 
-func (o *Orchestrator) AdvanceAlbum(jobID int) error {
-	state, err := o.svc.GetJobState
-	if err != nil {
-		return err
+func (o *Orchestrator) Run() error {
+	for {
+		signal, err := o.AdvanceJob(job)
 	}
-	switch state {
-	case StateImportStarted:
-		return o.svc.GetMusicBrainzMatch(album)
-	}
+}
+
+type Job struct {
+	ID    int
+	Stage ImportStage
+	Path  string
+}
+
+type Signal struct {
+	Job        Job
+	UserAction UserAction
 }

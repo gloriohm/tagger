@@ -1,0 +1,180 @@
+package workflow
+
+import (
+	"errors"
+	"tagger/internal/compare"
+	"tagger/internal/mbfetcher"
+	"tagger/internal/tag_loader"
+)
+
+type Workflow struct {
+	mbsvc mbfetcher.BrainzClient
+	user  UserSelector
+}
+
+type Job struct {
+	path         string
+	stage        ImportStage
+	tags         tag_loader.AlbumIdentifiers
+	release      mbfetcher.Album
+	releaseGroup []mbfetcher.ReleaseInfo
+	comparision  compare.Comparision
+}
+
+type ImportStage int
+
+const (
+	LoadTags ImportStage = iota
+	TryReleaseID
+	TryReleaseGroup
+	UserSelectRelease
+	ValidateMusicBrainzResult
+	UserReviewRelease
+	UserSelectGenres
+	ImportComplete
+)
+
+func NewWorkflow(mbclient mbfetcher.BrainzClient) *Workflow {
+	return &Workflow{mbsvc: mbclient}
+}
+
+func (wf *Workflow) NewImportJob(job *Job) error {
+	for job.stage != ImportComplete {
+		if err := wf.advanceJob(job); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (wf *Workflow) advanceJob(job *Job) error {
+	switch job.stage {
+	case LoadTags:
+		return wf.loadTags(job)
+	case TryReleaseID:
+		return wf.tryReleaseID(job)
+	case TryReleaseGroup:
+		return wf.tryReleaseGroup(job)
+	case UserSelectRelease:
+		return wf.userSelectRelease(job)
+	case ValidateMusicBrainzResult:
+		return wf.validateMusicBrainzResult(job)
+	case UserReviewRelease:
+		return wf.userReviewRelease(job)
+	default:
+		return ErrUnknownStage
+	}
+}
+
+func (wf *Workflow) loadTags(job *Job) error {
+	tags, err := tag_loader.LoadAlbum(job.path)
+	if err != nil {
+		return err
+	}
+
+	// consider checking most specific id and assigning stage directly
+	// can avoid the fallback logic entirely
+
+	job.tags = tags
+	job.stage = TryReleaseID
+	return nil
+}
+
+func (wf *Workflow) tryReleaseID(job *Job) error {
+	release, err := wf.mbsvc.GetReleaseByID(job.tags.ReleaseID)
+	if err != nil {
+		if errors.Is(err, mbfetcher.ErrNotFound) {
+			job.stage = TryReleaseGroup
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	job.release = release
+	job.stage = ValidateMusicBrainzResult
+
+	return nil
+}
+
+func (wf *Workflow) tryReleaseGroup(job *Job) error {
+	releaseGroup, err := wf.mbsvc.GetReleaseGroup(job.tags.ReleaseGroupID)
+	if err != nil && !errors.Is(err, mbfetcher.ErrNotFound) {
+		return err
+	}
+
+	if len(releaseGroup) > 0 {
+		job.releaseGroup = releaseGroup
+		job.stage = UserSelectRelease
+
+		return nil // return early if release group was found by id
+	}
+
+	releaseGroup, err = wf.mbsvc.SearchReleaseGroup(job.tags.AlbumArtist, job.tags.AlbumName)
+	if err != nil && !errors.Is(err, mbfetcher.ErrNotFound) {
+		return err
+	}
+
+	job.releaseGroup = releaseGroup
+	job.stage = UserSelectRelease
+
+	return nil
+}
+
+func (wf *Workflow) userSelectRelease(job *Job) error {
+	selection, err := wf.user.SelectRelease(job.releaseGroup)
+	if err != nil {
+		return err
+	}
+
+	release, err := wf.mbsvc.GetReleaseByID(selection.ReleaseID)
+	if err != nil {
+		if errors.Is(err, mbfetcher.ErrNotFound) {
+			// repeats step if not found. means user input invalid id
+			// should be updated to include user feedback
+			return nil
+		}
+
+		return err
+	}
+
+	job.release = release
+	job.stage = ValidateMusicBrainzResult
+
+	return nil
+}
+
+func (wf *Workflow) validateMusicBrainzResult(job *Job) error {
+	localAlbum := localAlbumToCompare(job.tags)
+	mbAlbum := mbAlbumToCompare(job.release)
+
+	comparision := compare.CompareAlbum(localAlbum, mbAlbum)
+
+	if comparision.Distance < 0.05 {
+		job.stage = UserSelectGenres
+	} else {
+		job.comparision = comparision
+		job.stage = UserReviewRelease
+	}
+
+	return nil
+}
+
+func (wf *Workflow) userReviewRelease(job *Job) error {
+	decision, err := wf.user.ReviewRelease(job.comparision)
+	if err != nil {
+		return err
+	}
+
+	if decision.Approved {
+		job.stage = UserSelectGenres
+	} else {
+		job.tags.ReleaseID = decision.ReleaseID
+		job.stage = TryReleaseID
+	}
+
+	return nil
+}
+
+func (wf *Workflow) userInputGenre()
