@@ -20,6 +20,7 @@ func ReleaseToAlbum(r musicbrainzws2.Release) Album {
 				DiscNumber:    m.Position,
 				ArtistCredit:  extractArtistCredit(t.Recording.ArtistCredit),
 				Artists:       extractArtists(t.Recording.ArtistCredit),
+				Duration:      t.Length.Duration,
 			}
 
 			tracks = append(tracks, track)

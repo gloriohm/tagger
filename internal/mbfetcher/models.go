@@ -21,6 +21,7 @@ type Track struct {
 	Name          string
 	DiscNumber    int
 	TrackNumber   int
+	Duration      time.Duration
 }
 
 type Artist struct {
