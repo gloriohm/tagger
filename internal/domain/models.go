@@ -1,4 +1,4 @@
-package tagger
+package domain
 
 import "time"
 
@@ -47,11 +47,3 @@ type Label struct {
 	Name string
 	Slug string
 }
-
-type ImportStatus string
-
-const (
-	ImportStatusInitialized  ImportStatus = "initialized"
-	ImportStatusPendingInput ImportStatus = "pending_input"
-	ImportStatusFinished     ImportStatus = "finished"
-)

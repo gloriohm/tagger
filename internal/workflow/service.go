@@ -5,6 +5,8 @@ import (
 	"tagger/internal/compare"
 	"tagger/internal/mbfetcher"
 	"tagger/internal/tag_loader"
+	"tagger/internal/tagger"
+	"tagger/internal/ui"
 )
 
 type Workflow struct {
@@ -19,6 +21,7 @@ type Job struct {
 	release      mbfetcher.Album
 	releaseGroup []mbfetcher.ReleaseInfo
 	comparision  compare.Comparision
+	genres       tagger.Genre
 }
 
 type ImportStage int
@@ -123,12 +126,12 @@ func (wf *Workflow) tryReleaseGroup(job *Job) error {
 }
 
 func (wf *Workflow) userSelectRelease(job *Job) error {
-	selection, err := wf.user.SelectRelease(job.releaseGroup)
+	releaseID, err := ui.SelectRelease(job.releaseGroup)
 	if err != nil {
 		return err
 	}
 
-	release, err := wf.mbsvc.GetReleaseByID(selection.ReleaseID)
+	release, err := wf.mbsvc.GetReleaseByID(releaseID)
 	if err != nil {
 		if errors.Is(err, mbfetcher.ErrNotFound) {
 			// repeats step if not found. means user input invalid id
@@ -162,19 +165,28 @@ func (wf *Workflow) validateMusicBrainzResult(job *Job) error {
 }
 
 func (wf *Workflow) userReviewRelease(job *Job) error {
-	decision, err := wf.user.ReviewRelease(job.comparision)
+	approved, err := ui.ReviewMatch(job.comparision)
 	if err != nil {
 		return err
 	}
 
-	if decision.Approved {
+	if approved {
 		job.stage = UserSelectGenres
 	} else {
-		job.tags.ReleaseID = decision.ReleaseID
-		job.stage = TryReleaseID
+		job.stage = UserSelectRelease
 	}
 
 	return nil
 }
 
-func (wf *Workflow) userInputGenre()
+func (wf *Workflow) userInputGenre(job *Job) error {
+	genres, err := ui.SelectGenres()
+	if err != nil {
+		return err
+	}
+
+	job.genres = genres
+	job.stage = CreateDomainModel
+
+	return nil
+}

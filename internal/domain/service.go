@@ -1,4 +1,4 @@
-package tagger
+package domain
 
 import (
 	"errors"
@@ -6,9 +6,6 @@ import (
 )
 
 type Repo interface {
-	InsertPaths(paths []string) error //new album paths to directory table
-	SelectPath(status ImportStatus) (*string, error)
-
 	// SelectAlbum(id int64) (Album, error)
 	// InsertAlbum(in Album) (int64, error)
 	// UpdateAlbum(id int64) error
@@ -32,6 +29,8 @@ type Repo interface {
 	// InsertGenre(in Genre) (int64, error)
 	// UpdateGenre(id int64) error
 	// DeleteGenre(id int64) error
+
+	SelectLabelByMBID(id string) (Label, error)
 }
 
 type Service struct {
@@ -43,18 +42,7 @@ func NewService(r Repo, c *mbfetcher.BrainzClient) *Service {
 	return &Service{repo: r, client: c}
 }
 
-func ParseAlbum(in mbfetcher.Album) Album {
-	var a Album
-	a.MBReleaseID = in.MBReleaseID
-	a.MBReleaseGroupID = in.MBReleaseGroupID
-	a.Name = in.Name
-
-	// check this against zero value and request user input if true
-	a.ReleaseDate = in.ReleaseDate
-
-}
-
-func (s *Service) parseLabel(in mbfetcher.LabelInfo) (Label, error) {
+func (s *Service) UpsertLabel(in mbfetcher.LabelInfo) (Label, error) {
 	var out Label
 	out, err := s.repo.SelectLabelByMBID(in.MBID)
 	if errors.Is(err, ErrNoRows) {
