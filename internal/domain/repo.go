@@ -2,6 +2,7 @@ package domain
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type SQLiteRepo struct {
@@ -43,4 +44,17 @@ func (r *SQLiteRepo) SelectArtistByMBID(mbid string) (*Artist, error) {
 			mbid,
 		),
 	)
+}
+
+func (r *SQLiteRepo) InsertGenre(genre Genre) (Genre, error) {
+	err := r.db.QueryRow(
+		"INSERT INTO genres (name, slug) VALUES (?, ?) RETURNING id",
+		genre.Name, genre.Slug,
+	).Scan(&genre.ID)
+
+	if err != nil {
+		return Genre{}, fmt.Errorf("insert genre: %w", err)
+	}
+
+	return genre, nil
 }

@@ -26,7 +26,7 @@ type Repo interface {
 
 	// SelectGenre(id int64) (Genre, error)
 	// ListGenres(query string) ([]Genre, error)
-	// InsertGenre(in Genre) (int64, error)
+	InsertGenre(in Genre) (Genre, error)
 	// UpdateGenre(id int64) error
 	// DeleteGenre(id int64) error
 
@@ -58,4 +58,33 @@ func (s *Service) UpsertLabel(in mbfetcher.LabelInfo) (Label, error) {
 	}
 
 	return out, nil
+}
+
+func (s *Service) CreateAlbum(release mbfetcher.Album, genres []Genre) error {
+	if err := s.createMissingGenres(genres); err != nil {
+		return err
+	}
+
+	if err := s.parseAndMatchLabels(release.Label); err != nil {
+		return err
+	}
+}
+
+func (s *Service) createMissingGenres(genres []Genre) error {
+	for i := range genres {
+		if genres[i].ID == 0 {
+			genre, err := s.repo.InsertGenre(genres[i])
+			if err != nil {
+				return err
+			}
+
+			genres[i] = genre
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) parseAndMatchLabels(labels []mbfetcher.LabelInfo) ([]Label, error) {
+
 }

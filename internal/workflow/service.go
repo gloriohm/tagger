@@ -3,6 +3,7 @@ package workflow
 import (
 	"errors"
 	"tagger/internal/compare"
+	"tagger/internal/domain"
 	"tagger/internal/mbfetcher"
 	"tagger/internal/tag_loader"
 	"tagger/internal/tagger"
@@ -10,8 +11,9 @@ import (
 )
 
 type Workflow struct {
-	mbsvc mbfetcher.BrainzClient
-	user  UserSelector
+	mbsvc     mbfetcher.BrainzClient
+	domainsvc domain.Service
+	user      UserSelector
 }
 
 type Job struct {
@@ -34,6 +36,8 @@ const (
 	ValidateMusicBrainzResult
 	UserReviewRelease
 	UserSelectGenres
+	CreateDomainModel
+	TagFiles
 	ImportComplete
 )
 
@@ -65,6 +69,8 @@ func (wf *Workflow) advanceJob(job *Job) error {
 		return wf.validateMusicBrainzResult(job)
 	case UserReviewRelease:
 		return wf.userReviewRelease(job)
+	case CreateDomainModel:
+		return wf.createDomainModel(job)
 	default:
 		return ErrUnknownStage
 	}
@@ -187,6 +193,16 @@ func (wf *Workflow) userInputGenre(job *Job) error {
 
 	job.genres = genres
 	job.stage = CreateDomainModel
+
+	return nil
+}
+
+func (wf *Workflow) createDomainModel(job *Job) error {
+	if err := wf.domainsvc.CreateAlbum(job.release, job.genres); err != nil {
+
+	}
+
+	job.stage = TagFiles
 
 	return nil
 }
