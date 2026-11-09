@@ -7,10 +7,10 @@ type Album struct {
 	MBReleaseID      string
 	MBReleaseGroupID string
 	Name             string
+	Slug             string
 	AlbumArtists     []Artist
 	ReleaseDate      time.Time
-	Label            Label
-	CatalogueNumber  string
+	Labels           []Label
 	TotalDiscs       int
 	Genres           []Genre
 	Tracks           []Track

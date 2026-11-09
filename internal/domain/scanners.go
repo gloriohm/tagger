@@ -2,7 +2,7 @@ package domain
 
 import "database/sql"
 
-func scanArtist(row *sql.Row) (*Artist, error) {
+func scanArtist(row *sql.Row) (Artist, error) {
 	var artist Artist
 
 	err := row.Scan(
@@ -10,15 +10,11 @@ func scanArtist(row *sql.Row) (*Artist, error) {
 		&artist.Name,
 	)
 
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-
 	if err != nil {
-		return nil, err
+		return Artist{}, err
 	}
 
-	return &artist, nil
+	return artist, nil
 }
 
 func scanLabel(row *sql.Row) (*Label, error) {
