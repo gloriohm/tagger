@@ -5,20 +5,21 @@ import (
 	"fmt"
 	"strings"
 	"tagger/internal/compare"
+	"tagger/internal/domain"
 	"tagger/internal/mbfetcher"
 
 	"github.com/charmbracelet/huh"
 )
 
-func SelectGenres(genres []string) ([]string, error) {
-	var selected []string
+func SelectGenres(genres []domain.Genre) ([]domain.Genre, error) {
+	var selected []domain.Genre
 
-	options := make([]huh.Option[string], 0, len(genres))
+	options := make([]huh.Option[domain.Genre], 0, len(genres))
 	for _, genre := range genres {
-		options = append(options, huh.NewOption(genre, genre))
+		options = append(options, huh.NewOption(genre.Name, genre))
 	}
 
-	err := huh.NewMultiSelect[string]().
+	err := huh.NewMultiSelect[domain.Genre]().
 		Title("Select album genres").
 		Description("Press / to search, Space to select").
 		Options(options...).

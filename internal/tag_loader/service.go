@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"tagger/internal/compare"
 
 	"go.senan.xyz/taglib"
 )
@@ -59,4 +60,45 @@ func LoadTrack(path string) (Track, error) {
 	track := parseTrack(path, tags, props)
 
 	return track, nil
+}
+
+func TagAlbum(path string, album []map[string][]string) error {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+
+	var musicFiles []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		ext := strings.ToLower(filepath.Ext(entry.Name()))
+		if ext == ".flac" || ext == ".opus" {
+			musicFiles = append(musicFiles, entry.Name())
+		}
+	}
+
+	if len(musicFiles) != len(album) {
+		return ErrDifferentTrackCount
+	}
+
+	for i := range musicFiles {
+		tags, err := taglib.ReadTags(musicFiles[i])
+		if err != nil {
+			return err
+		}
+
+		distance := compare.CompareTrackName(tags[taglib.Title][0], album[i][taglib.Title][0])
+		if distance > 0.5 {
+			return ErrCheckTrackOrder
+		}
+
+		if err := taglib.WriteTags(musicFiles[i], album[i], taglib.Clear); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

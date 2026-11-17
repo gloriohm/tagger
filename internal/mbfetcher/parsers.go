@@ -27,15 +27,6 @@ func ReleaseToAlbum(r musicbrainzws2.Release) Album {
 		}
 	}
 
-	var albumArtists []Artist
-	for _, ac := range r.ArtistCredit {
-		artist := Artist{
-			Name: ac.Artist.Name,
-			MBID: string(ac.Artist.ID),
-		}
-		albumArtists = append(albumArtists, artist)
-	}
-
 	var labels []LabelInfo
 	for _, l := range r.LabelInfo {
 		label := LabelInfo{
@@ -47,14 +38,15 @@ func ReleaseToAlbum(r musicbrainzws2.Release) Album {
 	}
 
 	album := Album{
-		MBReleaseID:      string(r.ID),
-		MBReleaseGroupID: string(r.ReleaseGroup.ID),
-		Name:             r.Title,
-		ReleaseDate:      extractReleaseDate(r.ReleaseGroup.FirstReleaseDate),
-		Label:            labels,
-		TotalDiscs:       extractDiscCount(r.Media),
-		AlbumArtists:     albumArtists,
-		Tracks:           tracks,
+		MBReleaseID:       string(r.ID),
+		MBReleaseGroupID:  string(r.ReleaseGroup.ID),
+		Name:              r.Title,
+		ReleaseDate:       extractReleaseDate(r.ReleaseGroup.FirstReleaseDate),
+		Label:             labels,
+		TotalDiscs:        extractDiscCount(r.Media),
+		AlbumArtists:      extractArtists(r.ArtistCredit),
+		AlbumArtistCredit: extractArtistCredit(r.ArtistCredit),
+		Tracks:            tracks,
 	}
 
 	return album

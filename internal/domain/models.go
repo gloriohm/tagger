@@ -3,24 +3,23 @@ package domain
 import "time"
 
 type Album struct {
-	ID               int64
-	MBReleaseID      string
-	MBReleaseGroupID string
-	Name             string
-	Slug             string
-	AlbumArtists     []Artist
-	ReleaseDate      time.Time
-	Labels           []Label
-	TotalDiscs       int
-	Genres           []Genre
-	Tracks           []Track
+	ID                int64
+	MBReleaseID       string
+	MBReleaseGroupID  string
+	Name              string
+	AlbumArtistCredit string // Display name as string with join phrases from mb
+	AlbumArtists      []Artist
+	ReleaseDate       time.Time
+	Labels            []Label
+	TotalDiscs        int
+	Genres            []Genre
+	Tracks            []Track
 }
 
 type Artist struct {
 	ID   int64
 	MBID string
 	Name string
-	Slug string
 }
 
 type Track struct {
@@ -38,12 +37,10 @@ type Track struct {
 type Genre struct {
 	ID   int64
 	Name string
-	Slug string
 }
 
 type Label struct {
 	ID   int64
 	MBID string
 	Name string
-	Slug string
 }

@@ -6,7 +6,6 @@ import (
 	"tagger/internal/domain"
 	"tagger/internal/mbfetcher"
 	"tagger/internal/tag_loader"
-	"tagger/internal/tagger"
 	"tagger/internal/ui"
 )
 
@@ -17,13 +16,14 @@ type Workflow struct {
 }
 
 type Job struct {
-	path         string
-	stage        ImportStage
-	tags         tag_loader.AlbumIdentifiers
-	release      mbfetcher.Album
-	releaseGroup []mbfetcher.ReleaseInfo
-	comparision  compare.Comparision
-	genres       tagger.Genre
+	path            string
+	stage           ImportStage
+	tags            tag_loader.AlbumIdentifiers
+	release         mbfetcher.Album
+	releaseGroup    []mbfetcher.ReleaseInfo
+	comparision     compare.Comparision
+	genres          []domain.Genre
+	InternalAlbumID int64
 }
 
 type ImportStage int
@@ -38,6 +38,7 @@ const (
 	UserSelectGenres
 	CreateDomainModel
 	TagFiles
+	MoveFolder
 	ImportComplete
 )
 
@@ -71,6 +72,10 @@ func (wf *Workflow) advanceJob(job *Job) error {
 		return wf.userReviewRelease(job)
 	case CreateDomainModel:
 		return wf.createDomainModel(job)
+	case TagFiles:
+		return wf.tagFiles(job)
+	case MoveFolder:
+		return wf.moveFolder(job)
 	default:
 		return ErrUnknownStage
 	}
@@ -186,23 +191,48 @@ func (wf *Workflow) userReviewRelease(job *Job) error {
 }
 
 func (wf *Workflow) userInputGenre(job *Job) error {
-	genres, err := ui.SelectGenres()
+	genres, err := wf.domainsvc.GetGenres()
+	if err != nil {
+		return err
+	}
+	selectedGenres, err := ui.SelectGenres(genres)
 	if err != nil {
 		return err
 	}
 
-	job.genres = genres
+	job.genres = selectedGenres
 	job.stage = CreateDomainModel
 
 	return nil
 }
 
 func (wf *Workflow) createDomainModel(job *Job) error {
-	if err := wf.domainsvc.CreateAlbum(job.release, job.genres); err != nil {
-
+	id, err := wf.domainsvc.CreateAlbum(job.release, job.genres)
+	if err != nil {
+		return err
 	}
 
+	job.InternalAlbumID = id
 	job.stage = TagFiles
 
+	return nil
+}
+
+func (wf *Workflow) tagFiles(job *Job) error {
+	albumTags, err := wf.domainsvc.GetAlbumTags(job.InternalAlbumID)
+	if err != nil {
+		return err
+	}
+
+	if err := tag_loader.TagAlbum(job.path, albumTags); err != nil {
+		return err
+	}
+
+	job.stage = MoveFolder
+
+	return nil
+}
+
+func (wf *Workflow) moveFolder(job *Job) error {
 	return nil
 }

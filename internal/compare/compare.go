@@ -34,6 +34,11 @@ type Comparision struct {
 	Differences []Difference
 }
 
+func CompareTrackName(a, b string) float64 {
+	// returns a number between 0 and 1 where 0 is identical and 1 is most different
+	return stringDistance(a, b)
+}
+
 func CompareAlbum(local, mb Album) Comparision {
 	var result Comparision
 	var weightedSum, totalWeight float64

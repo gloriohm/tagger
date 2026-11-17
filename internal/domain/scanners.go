@@ -8,6 +8,7 @@ func scanArtist(row *sql.Row) (Artist, error) {
 	err := row.Scan(
 		&artist.ID,
 		&artist.Name,
+		&artist.MBID,
 	)
 
 	if err != nil {

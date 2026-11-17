@@ -2,10 +2,9 @@ package main
 
 import (
 	"log"
+	"tagger/internal/domain"
 	"tagger/internal/mbfetcher"
 	"tagger/internal/storage"
-	"tagger/internal/tagger"
-	"tagger/internal/ui"
 
 	"go.uploadedlobster.com/musicbrainzws2"
 )
@@ -17,17 +16,10 @@ func main() {
 	}
 	defer database.Close()
 
-	repo := tagger.NewSQLiteRepo(database)
+	repo := domain.NewSQLiteRepo(database)
 	appInfo := musicbrainzws2.AppInfo{Name: "mangum0pus@proton.me", Version: "0.0.1"}
 	mbclient := musicbrainzws2.NewClient(appInfo)
 	fetchSvc := mbfetcher.NewBrainzClient(mbclient)
-	tagSvc := tagger.NewService(repo, fetchSvc)
+	tagSvc := domain.NewService(repo, fetchSvc)
 
-	if err = tagSvc.InitializeDirectory("test"); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := ui.Run(tagSvc); err != nil {
-		log.Fatal(err)
-	}
 }

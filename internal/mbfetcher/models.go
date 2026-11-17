@@ -3,14 +3,15 @@ package mbfetcher
 import "time"
 
 type Album struct {
-	MBReleaseID      string
-	MBReleaseGroupID string
-	Name             string
-	ReleaseDate      time.Time
-	Label            []LabelInfo
-	TotalDiscs       int
-	AlbumArtists     []Artist
-	Tracks           []Track
+	MBReleaseID       string
+	MBReleaseGroupID  string
+	Name              string
+	ReleaseDate       time.Time
+	Label             []LabelInfo
+	TotalDiscs        int
+	AlbumArtistCredit string
+	AlbumArtists      []Artist
+	Tracks            []Track
 }
 
 type Track struct {
